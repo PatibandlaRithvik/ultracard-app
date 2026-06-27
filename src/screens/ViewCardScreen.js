@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView,
-  Share, ActivityIndicator, Alert, Clipboard,
+  Share, ActivityIndicator, Alert,
 } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { getCard } from '../lib/api';
@@ -30,7 +31,7 @@ export default function ViewCardScreen({ route, navigation }) {
   };
 
   const copyLink = async () => {
-    Clipboard.setString(CARD_URL(cardId));
+    await Clipboard.setStringAsync(CARD_URL(cardId));
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     showToast('Link copied!');
   };
