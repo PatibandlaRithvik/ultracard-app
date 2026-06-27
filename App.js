@@ -1,6 +1,7 @@
 import 'react-native-gesture-handler';
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
@@ -17,19 +18,21 @@ const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
-    <AuthProvider>
-      <NavigationContainer>
-        <StatusBar style="light" />
-        <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Home">
-          <Stack.Screen name="Home" component={HomeScreen} />
-          <Stack.Screen name="Login" component={LoginScreen} />
-          <Stack.Screen name="CreateCard" component={CreateCardScreen} />
-          <Stack.Screen name="ViewCard" component={ViewCardScreen} />
-          <Stack.Screen name="EditCard" component={EditCardScreen} />
-          <Stack.Screen name="MyCards" component={MyCardsScreen} />
-          <Stack.Screen name="NearbyShare" component={NearbyShareScreen} />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </AuthProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <AuthProvider>
+        <NavigationContainer>
+          <StatusBar style="light" />
+          <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Home">
+            <Stack.Screen name="Home" component={HomeScreen} />
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="CreateCard" component={CreateCardScreen} />
+            <Stack.Screen name="ViewCard" component={ViewCardScreen} />
+            <Stack.Screen name="EditCard" component={EditCardScreen} />
+            <Stack.Screen name="MyCards" component={MyCardsScreen} />
+            <Stack.Screen name="NearbyShare" component={NearbyShareScreen} />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </AuthProvider>
+    </GestureHandlerRootView>
   );
 }

@@ -1,70 +1,89 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { initializeApp, getApps } from 'firebase/app';
-import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import { syncUser } from '../lib/api';
 
 const AuthContext = createContext(null);
 
-// Firebase config — replace with your project's values
-const FIREBASE_CONFIG = {
-  apiKey: 'YOUR_FIREBASE_API_KEY',
-  authDomain: 'YOUR_PROJECT.firebaseapp.com',
-  projectId: 'YOUR_PROJECT_ID',
-};
+// ── Firebase is optional ─────────────────────────────────────────────────────
+// App works without it (cards still load, create, share via link).
+// Add your Firebase config here to enable Google / Phone login.
+const FIREBASE_CONFIG = null;
+// const FIREBASE_CONFIG = {
+//   apiKey: 'AIza...',
+//   authDomain: 'yourproject.firebaseapp.com',
+//   projectId: 'yourproject',
+// };
+// ─────────────────────────────────────────────────────────────────────────────
 
-let firebaseAuth = null;
+let _auth = null;
 
-function initFirebase() {
-  if (firebaseAuth) return firebaseAuth;
-  const app = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
-  firebaseAuth = getAuth(app);
-  return firebaseAuth;
+async function getFirebaseAuth() {
+  if (_auth) return _auth;
+  if (!FIREBASE_CONFIG) return null;
+  try {
+    const { initializeApp, getApps } = await import('firebase/app');
+    const { getAuth } = await import('firebase/auth');
+    const app = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
+    _auth = getAuth(app);
+    return _auth;
+  } catch {
+    return null;
+  }
 }
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [firebaseReady, setFirebaseReady] = useState(false);
 
   useEffect(() => {
-    let auth;
-    try {
-      auth = initFirebase();
-    } catch {
-      setLoading(false);
-      return;
-    }
-    const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        const idToken = await firebaseUser.getIdToken();
-        setToken(idToken);
-        setUser(firebaseUser);
-        try { await syncUser(idToken); } catch {}
-      } else {
-        setUser(null);
-        setToken(null);
-      }
-      setLoading(false);
-    });
-    return unsub;
+    let unsub = null;
+    (async () => {
+      const auth = await getFirebaseAuth();
+      setFirebaseReady(!!auth);
+      if (!auth) { setLoading(false); return; }
+      const { onAuthStateChanged } = await import('firebase/auth');
+      unsub = onAuthStateChanged(auth, async (firebaseUser) => {
+        if (firebaseUser) {
+          try {
+            const idToken = await firebaseUser.getIdToken();
+            setToken(idToken);
+            setUser(firebaseUser);
+            await syncUser(idToken).catch(() => {});
+          } catch {}
+        } else {
+          setUser(null);
+          setToken(null);
+        }
+        setLoading(false);
+      });
+    })();
+    return () => { if (unsub) unsub(); };
   }, []);
 
   const getToken = async () => {
     if (!user) return null;
-    const idToken = await user.getIdToken(true);
-    setToken(idToken);
-    return idToken;
+    try {
+      const idToken = await user.getIdToken(true);
+      setToken(idToken);
+      return idToken;
+    } catch { return null; }
   };
 
-  const logout = () => {
+  const logout = async () => {
     try {
-      const auth = initFirebase();
-      signOut(auth);
+      const auth = await getFirebaseAuth();
+      if (auth) {
+        const { signOut } = await import('firebase/auth');
+        await signOut(auth);
+      }
     } catch {}
+    setUser(null);
+    setToken(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, getToken, logout }}>
+    <AuthContext.Provider value={{ user, token, loading, firebaseReady, getToken, logout }}>
       {children}
     </AuthContext.Provider>
   );

@@ -7,7 +7,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Audio } from 'expo-av';
 import * as Haptics from 'expo-haptics';
 import { useAuth } from '../context/AuthContext';
-import { getToken } from '../context/AuthContext';
 import { createSonicSession, API_BASE } from '../lib/api';
 
 // Ultrasonic channels: 15 frequencies 17600–19750 Hz (150 Hz spacing)
