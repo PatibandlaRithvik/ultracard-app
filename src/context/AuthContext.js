@@ -6,12 +6,11 @@ const AuthContext = createContext(null);
 // ── Firebase is optional ─────────────────────────────────────────────────────
 // App works without it (cards still load, create, share via link).
 // Add your Firebase config here to enable Google / Phone login.
-const FIREBASE_CONFIG = null;
-// const FIREBASE_CONFIG = {
-//   apiKey: 'AIza...',
-//   authDomain: 'yourproject.firebaseapp.com',
-//   projectId: 'yourproject',
-// };
+const FIREBASE_CONFIG = {
+  apiKey: 'AIzaSyBN4JqLThZnqsF26Ij9HrTrCjYPabax1yg',
+  authDomain: 'digitalcard-81ec3.firebaseapp.com',
+  projectId: 'digitalcard-81ec3',
+};
 // ─────────────────────────────────────────────────────────────────────────────
 
 let _auth = null;
