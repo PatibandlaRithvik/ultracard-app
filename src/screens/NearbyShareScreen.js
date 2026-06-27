@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView,
-  Alert, ActivityIndicator, FlatList,
+  Alert, ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Audio } from 'expo-av';
@@ -115,17 +115,19 @@ export default function NearbyShareScreen({ route, navigation }) {
       setMode('share');
 
       // Listen for connections via SSE
-      const es = new EventSource(`${API_BASE}/api/sonic/${sid}/stream`);
-      eventSourceRef.current = es;
-      es.onmessage = (e) => {
-        const data = JSON.parse(e.data);
-        if (data.type === 'connected') {
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          setMode('detected');
-          stopAll();
-        }
-      };
-      es.onerror = () => {};
+      // Poll for connection instead of SSE (SSE not supported in React Native)
+      const poll = setInterval(async () => {
+        try {
+          const { data } = await import('axios').then(m => m.default.get(`${API_BASE}/api/sonic/${sid}/status`));
+          if (data?.connected) {
+            clearInterval(poll);
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            setMode('detected');
+            stopAll();
+          }
+        } catch {}
+      }, 2000);
+      eventSourceRef.current = { close: () => clearInterval(poll) };
     } catch (err) {
       Alert.alert('Error', 'Failed to start ultrasonic sharing. Make sure you are signed in.');
       setMode('idle');
